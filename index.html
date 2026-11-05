@@ -5,17 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>2026 은명초 AI 선도학교 통합 자료실</title>
   <style>
-    /* 전체 배경 및 폰트 설정 */
     body {
       font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
       background-color: #f5f7fb;
       margin: 0;
       padding: 20px;
       color: #333;
-      user-select: none; /* 드래그 방지 */
+      user-select: none;
     }
 
-    /* 상단 헤더 및 필터 영역 */
     .header-container {
       max-width: 1200px;
       margin: 0 auto 30px auto;
@@ -45,7 +43,6 @@
       border-color: #4a90e2;
     }
 
-    /* 게시판(갤러리) 그리드 레이아웃 */
     .gallery-container {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -54,7 +51,6 @@
       margin: 0 auto;
     }
 
-    /* 개별 자료 카드 디자인 */
     .card {
       background: white;
       border-radius: 16px;
@@ -69,7 +65,6 @@
       box-shadow: 0 8px 25px rgba(0,0,0,0.1);
     }
 
-    /* 썸네일 대체 영역 */
     .card-thumbnail {
       height: 160px;
       background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
@@ -84,7 +79,6 @@
       background-repeat: no-repeat;
     }
 
-    /* 카드 내용 영역 */
     .card-content {
       padding: 20px;
       flex-grow: 1;
@@ -120,7 +114,6 @@
       text-align: right;
     }
 
-    /* 링크 버튼 */
     .btn-link {
       display: block;
       text-align: center;
@@ -133,15 +126,13 @@
       transition: background 0.2s;
     }
     .btn-link:hover { background-color: #357abd; }
-
-    /* 로딩 및 검색결과 없음 표시 */
     .status-msg { text-align: center; font-size: 20px; color: #666; margin-top: 50px; grid-column: 1 / -1; }
   </style>
 </head>
 <body>
 
   <div class="header-container">
-    <h1>📚 우리학교 통합 자료실</h1>
+    <h1>📚 2026 은명초 AI 선도학교 통합 자료실</h1>
     <div class="filter-group">
       <select id="gradeFilter">
         <option value="all">전체 학년</option>
@@ -157,7 +148,6 @@
   <div id="gallery" class="gallery-container"></div>
 
   <script>
-    // 🔒 1. 보안 스크립트: 우클릭 및 키보드 단축키 완벽 차단
     document.addEventListener('contextmenu', event => event.preventDefault());
     document.addEventListener('keydown', event => {
       if (event.keyCode === 123 || 
@@ -167,14 +157,10 @@
       }
     });
 
-    // 2. 구글 앱스 스크립트(GAS) 주소
     const API_URL = "https://script.google.com/macros/s/AKfycbymCDFt8lojL8DHE9ULHzpP6d9NCoiRpcb0HOwexP6Fx6wHeSzyNEXm05ZL7vZZsUx2/exec";
-    
     let allData = [];
 
-    // 3. 데이터 불러오기 (캐시 방지 적용)
     const cacheBuster = "?t=" + new Date().getTime(); 
-    
     fetch(API_URL + cacheBuster)
       .then(response => response.json())
       .then(data => {
@@ -188,7 +174,6 @@
         document.getElementById('loading').innerText = "데이터를 불러오는데 실패했습니다. 주소를 다시 확인해주세요.";
       });
 
-    // 4. 필터(드롭다운) 옵션 자동 생성
     function populateFilters() {
       const grades = new Set();
       const subjects = new Set();
@@ -213,7 +198,6 @@
       });
     }
 
-    // 5. 갤러리 카드 렌더링 함수 (제목 수정 & 썸네일 추가)
     function renderGallery(data) {
       const gallery = document.getElementById('gallery');
       gallery.innerHTML = ''; 
@@ -224,7 +208,6 @@
       }
 
       data.forEach(item => {
-        // 제목 띄어쓰기 문제를 해결하기 위해 '이름' 단어가 포함된 열을 유연하게 찾음
         const titleKey = Object.keys(item).find(k => k.includes('이름') && !k.includes('선생님')) || '';
         const title = titleKey && item[titleKey] ? item[titleKey] : '제목 없음';
         
@@ -241,16 +224,17 @@
         const linkKey = Object.keys(item).find(k => k.includes('링크')) || '';
         let linkUrl = item[fileKey] || item[linkKey] || '#';
 
-        // 썸네일 처리 로직 (설문지에 '썸네일' 문항이 있을 경우)
         const thumbKey = Object.keys(item).find(k => k.includes('썸네일')) || '';
-        let thumbHtml = `<div class="card-thumbnail">${subject}</div>`; // 기본 썸네일
+        let thumbHtml = `<div class="card-thumbnail">${subject}</div>`; 
         
         if (thumbKey && item[thumbKey]) {
-          const fileUrl = item[thumbKey];
-          // 구글 드라이브 주소에서 고유 ID만 추출하여 이미지 태그용 주소로 변환
-          const fileIdMatch = fileUrl.match(/id=([^&]+)/) || fileUrl.match(/d\/([a-zA-Z0-9-_]+)/);
+          // 파일이 여러 개 첨부되었을 경우를 대비해 첫 번째 주소만 추출
+          const fileUrls = item[thumbKey].toString().split(',')[0].trim();
+          const fileIdMatch = fileUrls.match(/id=([^&]+)/) || fileUrls.match(/d\/([a-zA-Z0-9-_]+)/);
+          
           if (fileIdMatch && fileIdMatch[1]) {
-            const imageSrc = `https://drive.google.com/uc?id=${fileIdMatch[1]}&export=view`;
+            // 구글 드라이브 정책을 우회하는 썸네일 전용 API 주소로 변경
+            const imageSrc = `https://drive.google.com/thumbnail?id=${fileIdMatch[1]}&sz=w600`;
             thumbHtml = `<div class="card-thumbnail" style="background-image: url('${imageSrc}'); color: transparent;"></div>`;
           }
         }
@@ -276,7 +260,6 @@
       });
     }
 
-    // 6. 다중 필터링 및 검색 로직
     function filterData() {
       const selectedGrade = document.getElementById('gradeFilter').value;
       const selectedSubject = document.getElementById('subjectFilter').value;
