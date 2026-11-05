@@ -5,44 +5,147 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>2026 은명초 AI 선도학교 통합 자료실</title>
   <style>
-    body {
-      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-      background-color: #f5f7fb;
-      margin: 0;
-      padding: 20px;
-      color: #333;
-      user-select: none;
+    /* 세련된 컬러 팔레트 변수 설정 */
+    :root {
+      --theme-navy: #2B3A4C; /* 고급스러운 네이비 */
+      --theme-beige: #EAE6DF; /* 차분한 웜 베이지 */
+      --theme-white: #FFFFFF;
+      --btn-blue: #4A90E2;
     }
 
-    .header-container {
-      max-width: 1200px;
-      margin: 0 auto 30px auto;
-      text-align: center;
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      background-color: #D1D5DB; /* 화면 밖 바탕화면 색상 */
+      margin: 0;
+      padding: 3vh 3vw;
+      color: #333;
+      user-select: none; /* 드래그 방지 */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 94vh;
     }
-    h1 { color: #2c3e50; }
+
+    /* 레트로 윈도우 창 프레임 */
+    .os-window {
+      width: 100%;
+      max-width: 1400px;
+      height: 90vh;
+      background-color: var(--theme-beige);
+      border: 6px solid var(--theme-navy);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 10px 10px 30px rgba(0,0,0,0.2);
+    }
+
+    /* 윈도우 상단 타이틀바 */
+    .os-titlebar {
+      background-color: var(--theme-navy);
+      height: 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 10px;
+    }
+
+    /* 좌우 컨트롤 버튼 디자인 */
+    .os-btn {
+      width: 30px;
+      height: 30px;
+      background-color: var(--theme-beige);
+      border: 2px solid #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      color: #111;
+      cursor: default;
+      box-shadow: 2px 2px 0 #111; /* 레트로한 그림자 */
+    }
+    
+    .os-btn-group {
+      display: flex;
+      gap: 5px;
+    }
+
+    /* 창 내부 컨텐츠 영역 */
+    .os-content {
+      padding: 40px;
+      overflow-y: auto;
+      flex-grow: 1;
+    }
+
+    /* 상단 헤더 및 필터 영역 */
+    .header-container {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    h1 { 
+      color: var(--theme-navy); 
+      font-size: 3.5rem;
+      font-weight: 900;
+      letter-spacing: -2px;
+      margin: 0 0 20px 0;
+      text-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+    }
+
+    /* 하얀색 필터 박스 래퍼 */
+    .filter-wrapper {
+      background-color: var(--theme-white);
+      padding: 15px 30px;
+      display: inline-flex;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
     .filter-group {
       display: flex;
       justify-content: center;
+      align-items: center;
       flex-wrap: wrap;
       gap: 15px;
-      margin-top: 20px;
     }
-    select, input[type="text"] {
+
+    select {
       padding: 10px 15px;
       border-radius: 8px;
       border: 1px solid #ddd;
       font-size: 16px;
       outline: none;
+      cursor: pointer;
+      background-color: #f9f9f9;
     }
-    select { cursor: pointer; }
-    input[type="text"] {
+
+    /* 검색창 영역 */
+    .search-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-box input[type="text"] {
+      padding: 10px 15px 10px 40px;
+      border-radius: 50px; /* 둥근 검색창 */
+      border: 1px solid #ccc;
+      font-size: 16px;
+      outline: none;
       width: 200px;
       transition: border-color 0.2s;
     }
-    input[type="text"]:focus {
-      border-color: #4a90e2;
+
+    .search-box input[type="text"]:focus {
+      border-color: var(--theme-navy);
     }
 
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      font-size: 18px;
+      pointer-events: none;
+    }
+
+    /* 게시판(갤러리) 그리드 레이아웃 */
     .gallery-container {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -51,8 +154,9 @@
       margin: 0 auto;
     }
 
+    /* 개별 자료 카드 디자인 */
     .card {
-      background: white;
+      background: var(--theme-white);
       border-radius: 16px;
       overflow: hidden;
       box-shadow: 0 4px 15px rgba(0,0,0,0.05);
@@ -65,6 +169,7 @@
       box-shadow: 0 8px 25px rgba(0,0,0,0.1);
     }
 
+    /* 썸네일 대체 영역 */
     .card-thumbnail {
       height: 160px;
       background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
@@ -79,6 +184,7 @@
       background-repeat: no-repeat;
     }
 
+    /* 카드 내용 영역 */
     .card-content {
       padding: 20px;
       flex-grow: 1;
@@ -100,6 +206,7 @@
       font-weight: bold;
       margin: 0 0 10px 0;
       line-height: 1.4;
+      color: var(--theme-navy);
     }
     .card-topic {
       font-size: 14px;
@@ -114,10 +221,11 @@
       text-align: right;
     }
 
+    /* 링크 버튼 */
     .btn-link {
       display: block;
       text-align: center;
-      background-color: #4a90e2;
+      background-color: var(--btn-blue);
       color: white;
       text-decoration: none;
       padding: 12px;
@@ -131,23 +239,48 @@
 </head>
 <body>
 
-  <div class="header-container">
-    <h1>📚 2026 은명초 AI 선도학교 통합 자료실</h1>
-    <div class="filter-group">
-      <select id="gradeFilter">
-        <option value="all">전체 학년</option>
-      </select>
-      <select id="subjectFilter">
-        <option value="all">전체 과목</option>
-      </select>
-      <input type="text" id="topicSearch" placeholder="주제 검색...">
+  <!-- 레트로 윈도우 프레임 시작 -->
+  <div class="os-window">
+    <!-- 윈도우 상단 타이틀바 -->
+    <div class="os-titlebar">
+      <div class="os-btn">∨</div>
+      <div class="os-btn-group">
+        <div class="os-btn">─</div>
+        <div class="os-btn">□</div>
+        <div class="os-btn">✕</div>
+      </div>
+    </div>
+
+    <!-- 윈도우 내부 컨텐츠 -->
+    <div class="os-content">
+      <div class="header-container">
+        <h1>2026 은명초 AI 선도학교 통합 자료실</h1>
+        
+        <!-- 하얀색 필터 박스 -->
+        <div class="filter-wrapper">
+          <div class="filter-group">
+            <select id="gradeFilter">
+              <option value="all">전체 학년</option>
+            </select>
+            <select id="subjectFilter">
+              <option value="all">전체 과목</option>
+            </select>
+            
+            <div class="search-box">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="topicSearch" placeholder="주제 검색...">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="loading" class="status-msg">자료를 불러오는 중입니다...⏳</div>
+      <div id="gallery" class="gallery-container"></div>
     </div>
   </div>
 
-  <div id="loading" class="status-msg">자료를 불러오는 중입니다...⏳</div>
-  <div id="gallery" class="gallery-container"></div>
-
   <script>
+    // 🔒 1. 보안 스크립트: 우클릭 및 키보드 단축키 완벽 차단 (항상 포함)
     document.addEventListener('contextmenu', event => event.preventDefault());
     document.addEventListener('keydown', event => {
       if (event.keyCode === 123 || 
@@ -228,12 +361,10 @@
         let thumbHtml = `<div class="card-thumbnail">${subject}</div>`; 
         
         if (thumbKey && item[thumbKey]) {
-          // 파일이 여러 개 첨부되었을 경우를 대비해 첫 번째 주소만 추출
           const fileUrls = item[thumbKey].toString().split(',')[0].trim();
           const fileIdMatch = fileUrls.match(/id=([^&]+)/) || fileUrls.match(/d\/([a-zA-Z0-9-_]+)/);
           
           if (fileIdMatch && fileIdMatch[1]) {
-            // 구글 드라이브 정책을 우회하는 썸네일 전용 API 주소로 변경
             const imageSrc = `https://drive.google.com/thumbnail?id=${fileIdMatch[1]}&sz=w600`;
             thumbHtml = `<div class="card-thumbnail" style="background-image: url('${imageSrc}'); color: transparent;"></div>`;
           }
