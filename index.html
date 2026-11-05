@@ -25,7 +25,7 @@
     .filter-group {
       display: flex;
       justify-content: center;
-      flex-wrap: wrap; /* 모바일 등 좁은 화면에서 줄바꿈 */
+      flex-wrap: wrap;
       gap: 15px;
       margin-top: 20px;
     }
@@ -146,9 +146,143 @@
       <select id="subjectFilter">
         <option value="all">전체 과목</option>
       </select>
-      <!-- 주제 검색창 추가 -->
       <input type="text" id="topicSearch" placeholder="주제 검색...">
     </div>
   </div>
 
-  <div id="loading" class
+  <div id="loading" class="status-msg">자료를 불러오는 중입니다...⏳</div>
+  <div id="gallery" class="gallery-container"></div>
+
+  <script>
+    // 🔒 1. 보안 스크립트: 우클릭 및 키보드 단축키 완벽 차단
+    document.addEventListener('contextmenu', event => event.preventDefault());
+    document.addEventListener('keydown', event => {
+      if (event.keyCode === 123 || 
+         (event.ctrlKey && event.shiftKey && (event.keyCode === 73 || event.keyCode === 74)) || 
+         (event.ctrlKey && (event.keyCode === 85 || event.keyCode === 67 || event.keyCode === 86 || event.keyCode === 80))) { 
+        event.preventDefault();
+      }
+    });
+
+    // 2. 구글 앱스 스크립트(GAS) 주소
+    const API_URL = "https://script.google.com/macros/s/AKfycbymCDFt8lojL8DHE9ULHzpP6d9NCoiRpcb0HOwexP6Fx6wHeSzyNEXm05ZL7vZZsUx2/exec";
+    
+    let allData = [];
+
+    // 3. 데이터 불러오기 (🔥 브라우저 캐시 방지 적용 완료)
+    const cacheBuster = "?t=" + new Date().getTime(); 
+    
+    fetch(API_URL + cacheBuster)
+      .then(response => response.json())
+      .then(data => {
+        allData = data.reverse(); 
+        document.getElementById('loading').style.display = 'none';
+        
+        populateFilters(); 
+        renderGallery(allData); 
+      })
+      .catch(error => {
+        document.getElementById('loading').innerText = "데이터를 불러오는데 실패했습니다. 주소를 다시 확인해주세요.";
+      });
+
+    // 4. 필터(드롭다운) 옵션 자동 생성
+    function populateFilters() {
+      const grades = new Set();
+      const subjects = new Set();
+
+      allData.forEach(item => {
+        if(item['몇 학년 용인가요?']) grades.add(item['몇 학년 용인가요?']);
+        if(item['과목은 무엇인가요?']) subjects.add(item['과목은 무엇인가요?']);
+      });
+
+      const gradeFilter = document.getElementById('gradeFilter');
+      grades.forEach(g => {
+        const option = document.createElement('option');
+        option.value = g; option.innerText = g;
+        gradeFilter.appendChild(option);
+      });
+
+      const subjectFilter = document.getElementById('subjectFilter');
+      subjects.forEach(s => {
+        const option = document.createElement('option');
+        option.value = s; option.innerText = s;
+        subjectFilter.appendChild(option);
+      });
+    }
+
+    // 5. 갤러리 카드 렌더링 함수
+    function renderGallery(data) {
+      const gallery = document.getElementById('gallery');
+      gallery.innerHTML = ''; 
+
+      if (data.length === 0) {
+        gallery.innerHTML = '<div class="status-msg">조건에 맞는 자료가 없습니다. 텅~</div>';
+        return;
+      }
+
+      data.forEach(item => {
+        const title = item['자료의 이름'] || '제목 없음';
+        const grade = item['몇 학년 용인가요?'] || '공통';
+        const subject = item['과목은 무엇인가요?'] || '공통';
+        
+        const topicKey = Object.keys(item).find(k => k.includes('주제')) || '';
+        const topic = topicKey ? item[topicKey] : '';
+        
+        const authorKey = Object.keys(item).find(k => k.includes('선생님')) || '';
+        const author = authorKey ? item[authorKey] : '익명';
+
+        const fileKey = Object.keys(item).find(k => k.includes('업로드')) || '';
+        const linkKey = Object.keys(item).find(k => k.includes('링크')) || '';
+        
+        let linkUrl = item[fileKey] || item[linkKey] || '#';
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="card-thumbnail">${subject}</div>
+          <div class="card-content">
+            <div class="tags">
+              <span class="tag-grade">${grade}</span>
+              <span class="tag-subject">${subject}</span>
+            </div>
+            <h3 class="card-title">${title}</h3>
+            <div class="card-topic">📝 ${topic}</div>
+            <div class="card-author">올린이: ${author}</div>
+            <a href="${linkUrl}" target="_blank" class="btn-link" ${linkUrl === '#' ? 'style="background:#ccc; cursor:not-allowed;" onclick="return false;"' : ''}>
+              ${linkUrl === '#' ? '링크 없음' : '자료 열기'}
+            </a>
+          </div>
+        `;
+        gallery.appendChild(card);
+      });
+    }
+
+    // 6. 다중 필터링 및 검색 로직
+    function filterData() {
+      const selectedGrade = document.getElementById('gradeFilter').value;
+      const selectedSubject = document.getElementById('subjectFilter').value;
+      const searchKeyword = document.getElementById('topicSearch').value.toLowerCase().trim();
+
+      const filtered = allData.filter(item => {
+        const matchGrade = selectedGrade === 'all' || item['몇 학년 용인가요?'] === selectedGrade;
+        const matchSubject = selectedSubject === 'all' || item['과목은 무엇인가요?'] === selectedSubject;
+        
+        const topicKey = Object.keys(item).find(k => k.includes('주제')) || '';
+        const topicText = topicKey && item[topicKey] ? String(item[topicKey]).toLowerCase() : '';
+        const titleText = item['자료의 이름'] ? String(item['자료의 이름']).toLowerCase() : '';
+        
+        const matchKeyword = searchKeyword === '' || topicText.includes(searchKeyword) || titleText.includes(searchKeyword);
+
+        return matchGrade && matchSubject && matchKeyword;
+      });
+
+      renderGallery(filtered);
+    }
+
+    document.getElementById('gradeFilter').addEventListener('change', filterData);
+    document.getElementById('subjectFilter').addEventListener('change', filterData);
+    document.getElementById('topicSearch').addEventListener('input', filterData);
+
+  </script>
+</body>
+</html>
